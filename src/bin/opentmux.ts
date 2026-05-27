@@ -336,16 +336,12 @@ async function tryReclaimPort(
 }
 
 async function findAvailablePort(): Promise<number | null> {
-  let tmuxPanePids: Set<number> | null = null;
+  // NOTE: Port reclamation (tryReclaimPort) was removed because it
+  // could kill the main opencode process when the wrapper runs from
+  // a subagent tmux pane. The attach command now bypasses the wrapper
+  // entirely, so session-connected clients don't need port discovery.
   for (let port = OPENCODE_PORT_START; port <= OPENCODE_PORT_MAX; port++) {
     if (await checkPort(port)) return port;
-
-    if (!tmuxPanePids) {
-      tmuxPanePids = getTmuxPanePids();
-    }
-
-    const reclaimed = await tryReclaimPort(port, tmuxPanePids);
-    if (reclaimed && (await checkPort(port))) return port;
   }
   return null;
 }
@@ -401,6 +397,7 @@ async function main() {
     // Agent/Session management
     "agent",
     "session",
+    "attach",
     "export",
     "import",
     "github",

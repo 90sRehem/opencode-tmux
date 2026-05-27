@@ -50,18 +50,11 @@ function detectShell(): ShellConfig {
   return { name: 'unknown', rcFile: path.join(HOME, '.profile') };
 }
 
-function getAliasContent(shellName: string): string {
-  if (shellName === 'powershell') {
-    return `
-function opencode {
-    opentmux $args
-}
-`;
-  }
-  
-  return `alias opencode='opentmux'`;
-}
-
+// NOTE: The opencode alias is no longer auto-added because the wrapper's
+// port reclamation (tryReclaimPort) could kill the main opencode process
+// when opentmux runs from a subagent tmux pane.
+// Users inside tmux should use `opencode` directly (real binary).
+// The opentmux wrapper binary is available as `opentmux` in PATH.
 function getExportLine(): string {
   return `export OPENCODE_PORT=4096`;
 }
@@ -86,7 +79,6 @@ function setupAlias(): void {
   }
   
   let rcContent = fs.readFileSync(shell.rcFile, 'utf-8');
-  const aliasContent = getAliasContent(shell.name);
   
   const MARKER_START = '# >>> opentmux >>>';
   const MARKER_END = '# <<< opentmux <<<';
@@ -126,18 +118,20 @@ function setupAlias(): void {
   }
   
   let configBlock = '';
+  // No alias is added — see note above about why.
+  const installHint = '# The opentmux wrapper is available via `opentmux` in PATH.\n# Use `opencode` directly for the real binary.';
   if (shell.name === 'powershell') {
       configBlock = `
 ${MARKER_START}
 $env:OPENCODE_PORT="4096"
-${aliasContent}
+${installHint.replace(/\n/g, '\n# ')}
 ${MARKER_END}
 `;
   } else {
       configBlock = `
 ${MARKER_START}
 ${getExportLine()}
-${aliasContent}
+${installHint}
 ${MARKER_END}
 `;
   }
