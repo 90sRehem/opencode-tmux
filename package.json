@@ -5,7 +5,9 @@
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "bin": "./dist/bin/opentmux.js",
+  "bin": {
+    "opencode-tmux": "./dist/bin/opentmux.js"
+  },
   "files": [
     "dist"
   ],
